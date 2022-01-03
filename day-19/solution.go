@@ -98,18 +98,8 @@ func detectScanner(scanner1 scanner, beacons1 []beacon, beacons2 []beacon) (scan
 	absoluteBeacons1 := calcAbsoluteBeacons(scanner1, beacons1)
 
 
-	for i1, b1 := range beacons1 {
-		if len(beacons1) - (i1 + 1) < 12 {
-			// optimisation: not enough beacons left
-			continue
-		}
-
-		for i2, b2 := range beacons2 {
-			if len(beacons2) - (i2 + 1) < 12 {
-				// optimisation: not enough beacons left
-				continue
-			}
-			
+	for _, b1 := range beacons1 {
+		for _, b2 := range beacons2 {
 			for _, facing := range facings {
 				for _, top := range tops {
 					maybeScanner2 := calcAbsoluteScanner(scanner1, b1, b2, facing, top)
