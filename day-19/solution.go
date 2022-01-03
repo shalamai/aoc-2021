@@ -26,7 +26,7 @@ func part2() int {
 	max := 0
 	for _, a := range scanners {
 		for _, b := range scanners {
-			distance := calcDistance(a.pos, b.pos)
+			distance := calcDistance(a.coord, b.coord)
 			if distance > max {
 				max = distance
 			}
@@ -38,7 +38,7 @@ func part2() int {
 
 func getOceanMap() ([]scanner, []beacon) {
 	beaconsByScanners := parseInput()
-	initialScanner := scanner{pos{x: 0, y: 0, z: 0}, scannerState{top: up, facing: xpos}}
+	initialScanner := scanner{coord{x: 0, y: 0, z: 0}, scannerState{top: up, facing: xpos}}
 
 	scanners := scannersMap(initialScanner, beaconsByScanners)
 	beacons := beaconsMap(scanners, beaconsByScanners)
@@ -48,16 +48,16 @@ func getOceanMap() ([]scanner, []beacon) {
 
 func parseInput() [][]beacon {
 	scannersData := make([][]beacon, 0)
-	rawData, _ := os.ReadFile("./input.txt")
-	for _, group := range strings.Split(string(rawData), "\n\n") {
+	rawScannersData, _ := os.ReadFile("./input.txt")
+	for _, rawScannerData := range strings.Split(string(rawScannersData), "\n\n") {
 		scannerData := make([]beacon, 0)
-		for _, group := range strings.Split(group, "\n")[1:] {
-			rawNumbers := strings.Split(group, ",")
+		for _, row := range strings.Split(rawScannerData, "\n")[1:] {
+			rawNumbers := strings.Split(row, ",")
 			x, _ := strconv.ParseInt(rawNumbers[0], 10, 64)
 			y, _ := strconv.ParseInt(rawNumbers[1], 10, 64)
 			z, _ := strconv.ParseInt(rawNumbers[2], 10, 64)
 
-			scannerData = append(scannerData, beacon{pos{int(x), int(y), int(z)}})
+			scannerData = append(scannerData, beacon{coord{int(x), int(y), int(z)}})
 		}
 		scannersData = append(scannersData, scannerData)
 	}
@@ -78,8 +78,8 @@ func scannersMap(initialScanner scanner, beacons [][]beacon) map[int]scanner {
 
 		for i := 0; i < len(beacons); i++ {
 			if _, found := scanners[i]; !found {
-				s, isOverlapped := detectScanner(scanners[pinnedScanner], beacons[pinnedScanner], beacons[i])
-				if isOverlapped {
+				s, isDetected := detectScanner(scanners[pinnedScanner], beacons[pinnedScanner], beacons[i])
+				if isDetected {
 					scanners[i] = s
 					queue = append(queue, i)
 				}
@@ -91,9 +91,6 @@ func scannersMap(initialScanner scanner, beacons [][]beacon) map[int]scanner {
 }
 
 func detectScanner(scanner1 scanner, beacons1 []beacon, beacons2 []beacon) (scanner2 scanner, isOverlapped bool) {
-	facings := []facing{xpos, xneg, ypos, yneg, zpos, zneg}
-	tops := []top{up, down, left, right}
-
 	absoluteBeacons1 := calcAbsoluteBeacons(scanner1, beacons1)
 
 	for _, b1 := range beacons1 {
@@ -130,7 +127,7 @@ func calcAbsoluteScanner(scanner1 scanner, b1 beacon, b2 beacon, facing facing, 
 	scannerState := scannerState{top, facing}
 	x, y, z := calcAbsoluteBeaconDelta(scannerState, b2)
 
-	return scanner{pos{absoluteBeacon1.x - x, absoluteBeacon1.y - y, absoluteBeacon1.z - z}, scannerState}
+	return scanner{coord{absoluteBeacon1.x - x, absoluteBeacon1.y - y, absoluteBeacon1.z - z}, scannerState}
 }
 
 func calcAbsoluteBeacons(scanner scanner, beacons []beacon) []beacon {
@@ -144,36 +141,36 @@ func calcAbsoluteBeacons(scanner scanner, beacons []beacon) []beacon {
 
 func calcAbsoluteBeacon(scanner scanner, b beacon) beacon {
 	x, y, z := calcAbsoluteBeaconDelta(scanner.scannerState, b)
-	return beacon{pos{scanner.x + x, scanner.y + y, scanner.z + z}}
+	return beacon{coord{scanner.x + x, scanner.y + y, scanner.z + z}}
 }
 
 func calcAbsoluteBeaconDelta(scanner scannerState, b beacon) (x int, y int, z int) {
-	afterFacing := pos{}
+	afterFacing := coord{}
 	switch scanner.facing {
 	case xpos:
-		afterFacing = pos{b.x, b.y, b.z}
+		afterFacing = coord{b.x, b.y, b.z}
 	case xneg:
-		afterFacing = pos{-b.x, b.y, -b.z}
+		afterFacing = coord{-b.x, b.y, -b.z}
 	case zpos:
-		afterFacing = pos{-b.z, b.y, b.x}
+		afterFacing = coord{-b.z, b.y, b.x}
 	case zneg:
-		afterFacing = pos{b.z, b.y, -b.x}
+		afterFacing = coord{b.z, b.y, -b.x}
 	case ypos:
-		afterFacing = pos{-b.y, b.x, b.z}
+		afterFacing = coord{-b.y, b.x, b.z}
 	case yneg:
-		afterFacing = pos{b.y, -b.x, b.z}
+		afterFacing = coord{b.y, -b.x, b.z}
 	}
 
-	afterTop := pos{}
+	afterTop := coord{}
 	switch scanner.top {
 	case up:
-		afterTop = pos{afterFacing.x, afterFacing.y, afterFacing.z}
+		afterTop = coord{afterFacing.x, afterFacing.y, afterFacing.z}
 	case down:
-		afterTop = pos{afterFacing.x, -afterFacing.y, -afterFacing.z}
+		afterTop = coord{afterFacing.x, -afterFacing.y, -afterFacing.z}
 	case left:
-		afterTop = pos{afterFacing.x, afterFacing.z, -afterFacing.y}
+		afterTop = coord{afterFacing.x, afterFacing.z, -afterFacing.y}
 	case right:
-		afterTop = pos{afterFacing.x, -afterFacing.z, afterFacing.y}
+		afterTop = coord{afterFacing.x, -afterFacing.z, afterFacing.y}
 	}
 
 	return afterTop.x, afterTop.y, afterTop.z 
@@ -214,7 +211,7 @@ func beaconUnion(bs1 []beacon, bs2 []beacon) []beacon {
 	return set
 }
 
-func calcDistance(p1 pos, p2 pos) int {
+func calcDistance(p1 coord, p2 coord) int {
 	return int(math.Abs(float64(p1.x-p2.x)) + math.Abs(float64(p1.y-p2.y)) + math.Abs(float64(p1.z-p2.z)))
 }
 
@@ -238,6 +235,8 @@ const (
 	zneg        = iota
 )
 
+var facings = []facing{xpos, xneg, ypos, yneg, zpos, zneg}
+
 type top int
 
 const (
@@ -247,7 +246,9 @@ const (
 	right     = iota
 )
 
-type pos struct {
+var tops = []top{up, down, left, right}
+
+type coord struct {
 	x, y, z int
 }
 
@@ -257,10 +258,10 @@ type scannerState struct {
 }
 
 type scanner struct {
-	pos
+	coord
 	scannerState
 }
 
 type beacon struct {
-	pos
+	coord
 }
