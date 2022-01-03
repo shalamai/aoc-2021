@@ -8,13 +8,12 @@ import (
 	"strings"
 )
 
-
 func main() {
 	res1 := part1()
 	fmt.Println(res1)
 
 	res2 := part2()
-	fmt.Println(res2)	
+	fmt.Println(res2)
 }
 
 func part1() int {
@@ -40,7 +39,7 @@ func part2() int {
 func getOceanMap() ([]scanner, []beacon) {
 	beaconsByScanners := parseInput()
 	initialScanner := scanner{pos{x: 0, y: 0, z: 0}, scannerState{top: up, facing: xpos}}
-	
+
 	scanners := scannersMap(initialScanner, beaconsByScanners)
 	beacons := beaconsMap(scanners, beaconsByScanners)
 
@@ -69,10 +68,10 @@ func parseInput() [][]beacon {
 func scannersMap(initialScanner scanner, beacons [][]beacon) map[int]scanner {
 	scanners := make(map[int]scanner)
 	scanners[0] = initialScanner
-	
+
 	queue := make([]int, 0)
 	queue = append(queue, 0)
-	
+
 	for len(queue) > 0 {
 		pinnedScanner := queue[0]
 		queue = queue[1:]
@@ -97,7 +96,6 @@ func detectScanner(scanner1 scanner, beacons1 []beacon, beacons2 []beacon) (scan
 
 	absoluteBeacons1 := calcAbsoluteBeacons(scanner1, beacons1)
 
-
 	for _, b1 := range beacons1 {
 		for _, b2 := range beacons2 {
 			for _, facing := range facings {
@@ -107,7 +105,7 @@ func detectScanner(scanner1 scanner, beacons1 []beacon, beacons2 []beacon) (scan
 					sameBeacons := beaconIntersaction(absoluteBeacons1, absoluteBeacons2)
 					if len(sameBeacons) >= 12 {
 						return maybeScanner2, true
-					}		
+					}
 				}
 			}
 		}
@@ -150,76 +148,35 @@ func calcAbsoluteBeacon(scanner scanner, b beacon) beacon {
 }
 
 func calcAbsoluteBeaconDelta(scanner scannerState, b beacon) (x int, y int, z int) {
+	afterFacing := pos{}
 	switch scanner.facing {
 	case xpos:
-		switch scanner.top {
-		case up:
-			return b.x, b.y, b.z
-		case down:
-			return b.x, -b.y, -b.z
-		case left:
-			return b.x, b.z, -b.y
-		case right:
-			return b.x, -b.z, b.y
-		}
+		afterFacing = pos{b.x, b.y, b.z}
 	case xneg:
-		switch scanner.top {
-		case up:
-			return -b.x, b.y, -b.z
-		case down:
-			return -b.x, -b.y, b.z
-		case left:
-			return -b.x, -b.z, -b.y
-		case right:
-			return -b.x, b.z, b.y
-		}
+		afterFacing = pos{-b.x, b.y, -b.z}
 	case zpos:
-		switch scanner.top {
-		case up:
-			return -b.z, b.y, b.x
-		case down:
-			return b.z, -b.y, b.x
-		case left:
-			return -b.y, -b.z, b.x
-		case right:
-			return b.y, b.z, b.x
-		}
+		afterFacing = pos{-b.z, b.y, b.x}
 	case zneg:
-		switch scanner.top {
-		case up:
-			return b.z, b.y, -b.x
-		case down:
-			return -b.z, -b.y, -b.x
-		case left:
-			return -b.y, b.z, -b.x
-		case right:
-			return b.y, -b.z, -b.x
-		}
+		afterFacing = pos{b.z, b.y, -b.x}
 	case ypos:
-		switch scanner.top {
-		case up:
-			return -b.y, b.x, b.z
-		case down:
-			return b.y, b.x, -b.z
-		case left:
-			return -b.z, b.x, -b.y
-		case right:
-			return b.z, b.x, b.y
-		}
+		afterFacing = pos{-b.y, b.x, b.z}
 	case yneg:
-		switch scanner.top {
-		case up:
-			return b.y, -b.x, b.z
-		case down:
-			return -b.y, -b.x, -b.z
-		case left:
-			return b.z, -b.x, -b.y
-		case right:
-			return -b.z, -b.x, b.y
-		}
+		afterFacing = pos{b.y, -b.x, b.z}
 	}
 
-	panic("wrong input in calcAbsoluteBeaconDelta")
+	afterTop := pos{}
+	switch scanner.top {
+	case up:
+		afterTop = pos{afterFacing.x, afterFacing.y, afterFacing.z}
+	case down:
+		afterTop = pos{afterFacing.x, -afterFacing.y, -afterFacing.z}
+	case left:
+		afterTop = pos{afterFacing.x, afterFacing.z, -afterFacing.y}
+	case right:
+		afterTop = pos{afterFacing.x, -afterFacing.z, afterFacing.y}
+	}
+
+	return afterTop.x, afterTop.y, afterTop.z 
 }
 
 func beaconIntersaction(bs1 []beacon, bs2 []beacon) []beacon {
@@ -258,7 +215,7 @@ func beaconUnion(bs1 []beacon, bs2 []beacon) []beacon {
 }
 
 func calcDistance(p1 pos, p2 pos) int {
-	return int(math.Abs(float64(p1.x - p2.x)) + math.Abs(float64(p1.y - p2.y)) + math.Abs(float64(p1.z - p2.z)))
+	return int(math.Abs(float64(p1.x-p2.x)) + math.Abs(float64(p1.y-p2.y)) + math.Abs(float64(p1.z-p2.z)))
 }
 
 func values(m map[int]scanner) []scanner {
