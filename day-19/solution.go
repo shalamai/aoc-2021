@@ -10,11 +10,6 @@ import (
 
 
 func main() {
-	// b := beacon{pos: pos{1,2,3}}
-	// s := scannerState{top: down, facing: xpos}
-	// x, y, z := calcAbsoluteBeaconDelta(s, b)
-	// fmt.Printf("%v,%v,%v\n", x, y, z)
-
 	res1 := part1()
 	fmt.Println(res1)
 
@@ -102,26 +97,27 @@ func detectScanner(scanner1 scanner, beacons1 []beacon, beacons2 []beacon) (scan
 
 	absoluteBeacons1 := calcAbsoluteBeacons(scanner1, beacons1)
 
-	for _, facing := range facings {
-		for _, top := range tops {
-			for i1, b1 := range beacons1 {
-				if len(beacons1) - (i1 + 1) < 12 {
-					// optimisation: not enough beacons left
-					continue
-				}
 
-				for i2, b2 := range beacons2 {
-					if len(beacons2) - (i2 + 1) < 12 {
-						// optimisation: not enough beacons left
-						continue
-					}
+	for i1, b1 := range beacons1 {
+		if len(beacons1) - (i1 + 1) < 12 {
+			// optimisation: not enough beacons left
+			continue
+		}
 
+		for i2, b2 := range beacons2 {
+			if len(beacons2) - (i2 + 1) < 12 {
+				// optimisation: not enough beacons left
+				continue
+			}
+			
+			for _, facing := range facings {
+				for _, top := range tops {
 					maybeScanner2 := calcAbsoluteScanner(scanner1, b1, b2, facing, top)
 					absoluteBeacons2 := calcAbsoluteBeacons(maybeScanner2, beacons2)
 					sameBeacons := beaconIntersaction(absoluteBeacons1, absoluteBeacons2)
 					if len(sameBeacons) >= 12 {
 						return maybeScanner2, true
-					}
+					}		
 				}
 			}
 		}
@@ -320,36 +316,4 @@ type scanner struct {
 
 type beacon struct {
 	pos
-}
-
-func fasterCalcAbsoluteBeaconDelta() {
-	// beaconAfterFacing := beacon{}
-	// switch scanner.facing {
-	// case xpos:
-	// 	beaconAfterFacing = beacon{pos: pos{b.x, b.y, b.z}}
-	// case xneg:
-	// 	beaconAfterFacing = beacon{pos: pos{-b.x, b.y, -b.z}}
-	// case zpos:
-	// 	beaconAfterFacing = beacon{pos: pos{-b.z, b.y, b.x}}
-	// case zneg:
-	// 	beaconAfterFacing = beacon{pos: pos{b.z, b.y, -b.x}}
-	// case ypos:
-	// 	beaconAfterFacing = beacon{pos: pos{-b.y, b.x, b.z}}
-	// case yneg:
-	// 	beaconAfterFacing = beacon{pos: pos{-b.x, b.y, b.z}}
-	// }
-
-	// beaconAfterTop := beacon{}
-	// switch scanner.top {
-	// case up:
-	// 	beaconAfterTop = beacon{pos: pos{beaconAfterFacing.x, beaconAfterFacing.y, beaconAfterFacing.z}}
-	// case down:
-	// 	beaconAfterTop = beacon{pos: pos{beaconAfterFacing.x, -beaconAfterFacing.y, -beaconAfterFacing.z}}
-	// case left:
-	// 	beaconAfterTop = beacon{pos: pos{beaconAfterFacing.x, beaconAfterFacing.z, -beaconAfterFacing.y}}
-	// case right:
-	// 	beaconAfterTop = beacon{pos: pos{beaconAfterFacing.x, -beaconAfterFacing.z, beaconAfterFacing.y}}
-	// }
-
-	// fmt.Println(beaconAfterTop)
 }
