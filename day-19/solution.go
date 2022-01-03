@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+
 func main() {
 	// b := beacon{pos: pos{1,2,3}}
 	// s := scannerState{top: down, facing: xpos}
@@ -18,9 +19,7 @@ func main() {
 	fmt.Println(res1)
 
 	res2 := part2()
-	fmt.Println(res2)
-
-	// fmt.Println(calcDistance(pos{1105,-1205,1229}, pos{-92,-2380,-20}))
+	fmt.Println(res2)	
 }
 
 func part1() int {
@@ -49,7 +48,7 @@ func getOceanMap() ([]scanner, []beacon) {
 	
 	scanners := scannersMap(initialScanner, beaconsByScanners)
 	beacons := beaconsMap(scanners, beaconsByScanners)
-	
+
 	return values(scanners), beacons
 }
 
@@ -105,8 +104,18 @@ func detectScanner(scanner1 scanner, beacons1 []beacon, beacons2 []beacon) (scan
 
 	for _, facing := range facings {
 		for _, top := range tops {
-			for _, b1 := range beacons1 {
-				for _, b2 := range beacons2 {
+			for i1, b1 := range beacons1 {
+				if len(beacons1) - (i1 + 1) < 12 {
+					// optimisation: not enough beacons left
+					continue
+				}
+
+				for i2, b2 := range beacons2 {
+					if len(beacons2) - (i2 + 1) < 12 {
+						// optimisation: not enough beacons left
+						continue
+					}
+
 					maybeScanner2 := calcAbsoluteScanner(scanner1, b1, b2, facing, top)
 					absoluteBeacons2 := calcAbsoluteBeacons(maybeScanner2, beacons2)
 					sameBeacons := beaconIntersaction(absoluteBeacons1, absoluteBeacons2)
