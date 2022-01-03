@@ -38,7 +38,7 @@ func part2() int {
 
 func getOceanMap() ([]scanner, []beacon) {
 	beaconsByScanners := parseInput()
-	initialScanner := scanner{coord{x: 0, y: 0, z: 0}, scannerState{top: up, facing: xpos}}
+	initialScanner := scanner{coord{x: 0, y: 0, z: 0}, position{top: up, facing: xpos}}
 
 	scanners := scannersMap(initialScanner, beaconsByScanners)
 	beacons := beaconsMap(scanners, beaconsByScanners)
@@ -124,7 +124,7 @@ func beaconsMap(scanners map[int]scanner, beacons [][]beacon) []beacon {
 func calcAbsoluteScanner(scanner1 scanner, b1 beacon, b2 beacon, facing facing, top top) scanner {
 	absoluteBeacon1 := calcAbsoluteBeacon(scanner1, b1)
 
-	scannerState := scannerState{top, facing}
+	scannerState := position{top, facing}
 	x, y, z := calcAbsoluteBeaconDelta(scannerState, b2)
 
 	return scanner{coord{absoluteBeacon1.x - x, absoluteBeacon1.y - y, absoluteBeacon1.z - z}, scannerState}
@@ -140,11 +140,11 @@ func calcAbsoluteBeacons(scanner scanner, beacons []beacon) []beacon {
 }
 
 func calcAbsoluteBeacon(scanner scanner, b beacon) beacon {
-	x, y, z := calcAbsoluteBeaconDelta(scanner.scannerState, b)
+	x, y, z := calcAbsoluteBeaconDelta(scanner.position, b)
 	return beacon{coord{scanner.x + x, scanner.y + y, scanner.z + z}}
 }
 
-func calcAbsoluteBeaconDelta(scanner scannerState, b beacon) (x int, y int, z int) {
+func calcAbsoluteBeaconDelta(scanner position, b beacon) (x int, y int, z int) {
 	afterFacing := coord{}
 	switch scanner.facing {
 	case xpos:
@@ -252,14 +252,14 @@ type coord struct {
 	x, y, z int
 }
 
-type scannerState struct {
+type position struct {
 	top    top
 	facing facing
 }
 
 type scanner struct {
 	coord
-	scannerState
+	position
 }
 
 type beacon struct {
