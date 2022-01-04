@@ -18,7 +18,7 @@ func main() {
 
 func part1() int {
 	scanners := getScannerMap()
-	
+
 	acc := make([]coord, 0)
 	for _, s := range scanners {
 		acc = union(acc, s.beacons)
@@ -96,16 +96,17 @@ func detectScanners(initialScanner scanner, beacons [][]coord) map[int]scanner {
 }
 
 func detectScanner(absoluteBeacons1 []coord, relativeBeacons2 []coord) (scanner, bool) {
-	for _, absolute1 := range absoluteBeacons1 {
-		for _, relative2 := range relativeBeacons2 {
-			for _, facing := range facings {
-				for _, top := range tops {
-					p := position{top, facing}
-					coord := calcScannerCoord(p, absolute1, relative2)
-					absoluteBeacons2 := calcAbsoluteBeacons(coord, p, relativeBeacons2)
+	for _, facing := range facings {
+		for _, top := range tops {
+			p := position{top, facing}
+			relativeRotated2 := rotateN(p, relativeBeacons2)
+			for _, absolute1 := range absoluteBeacons1 {
+				for _, rr2 := range relativeRotated2 {
+					scannerCoord := coord{absolute1.x - rr2.x, absolute1.y - rr2.y, absolute1.z - rr2.z}
+					absoluteBeacons2 := moveN(scannerCoord, relativeRotated2)
 					sameBeacons := intersection(absoluteBeacons1, absoluteBeacons2)
 					if len(sameBeacons) >= 12 {
-						return scanner{coord, absoluteBeacons2}, true
+						return scanner{scannerCoord, absoluteBeacons2}, true
 					}
 				}
 			}
@@ -115,17 +116,20 @@ func detectScanner(absoluteBeacons1 []coord, relativeBeacons2 []coord) (scanner,
 	return scanner{}, false
 }
 
-func calcScannerCoord(p position, absoluteBeacon coord, relativeBeacon coord) coord {
-	delta := rotate(p, relativeBeacon)
-	return coord{absoluteBeacon.x - delta.x, absoluteBeacon.y - delta.y, absoluteBeacon.z - delta.z}
+func moveN(delta coord, cs []coord) []coord {
+	acc := make([]coord, 0)
+	for _, r := range cs {
+		acc = append(acc, coord{delta.x + r.x, delta.y + r.y, delta.z + r.z})
+	}
+
+	return acc
 }
 
-func calcAbsoluteBeacons(scannerCoord coord, scannerPosition position, beacons []coord) []coord {
+func rotateN(p position, cs []coord) []coord {
 	acc := make([]coord, 0)
-	for _, b := range beacons {
-		delta := rotate(scannerPosition, b)
-		absoluteB := coord{scannerCoord.x + delta.x, scannerCoord.y + delta.y, scannerCoord.z + delta.z}
-		acc = append(acc, absoluteB)
+	for _, b := range cs {
+		rotated := rotate(p, b)
+		acc = append(acc, rotated)
 	}
 
 	return acc
