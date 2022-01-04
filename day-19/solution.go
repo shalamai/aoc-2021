@@ -32,7 +32,7 @@ func part2() int {
 	max := 0
 	for _, a := range scanners {
 		for _, b := range scanners {
-			distance := distance(a.coord, b.coord)
+			distance := int(math.Abs(float64(a.x-b.x)) + math.Abs(float64(a.y-b.y)) + math.Abs(float64(a.z-b.z)))
 			if distance > max {
 				max = distance
 			}
@@ -100,12 +100,13 @@ func detectScanner(absoluteBeacons1 []coord, relativeBeacons2 []coord) (scanner,
 		for _, top := range tops {
 			p := position{top, facing}
 			relativeRotated2 := rotateN(p, relativeBeacons2)
+			deltas := make(map[coord]int)
 			for _, absolute1 := range absoluteBeacons1 {
 				for _, rr2 := range relativeRotated2 {
 					scannerCoord := coord{absolute1.x - rr2.x, absolute1.y - rr2.y, absolute1.z - rr2.z}
-					absoluteBeacons2 := moveN(scannerCoord, relativeRotated2)
-					sameBeacons := intersection(absoluteBeacons1, absoluteBeacons2)
-					if len(sameBeacons) >= 12 {
+					deltas[scannerCoord]++
+					if deltas[scannerCoord] >= 12 {
+						absoluteBeacons2 := moveN(scannerCoord, relativeRotated2)
 						return scanner{scannerCoord, absoluteBeacons2}, true
 					}
 				}
@@ -167,23 +168,6 @@ func rotate(p position, c coord) coord {
 	return afterTop
 }
 
-func intersection(c1 []coord, c2 []coord) []coord {
-	set := make([]coord, 0)
-	hash := make(map[coord]bool)
-
-	for _, b := range c1 {
-		hash[b] = true
-	}
-
-	for _, b := range c2 {
-		if _, found := hash[b]; found {
-			set = append(set, b)
-		}
-	}
-
-	return set
-}
-
 func union(c1 []coord, c2 []coord) []coord {
 	set := make([]coord, 0)
 	hash := make(map[coord]bool)
@@ -200,10 +184,6 @@ func union(c1 []coord, c2 []coord) []coord {
 	}
 
 	return set
-}
-
-func distance(p1 coord, p2 coord) int {
-	return int(math.Abs(float64(p1.x-p2.x)) + math.Abs(float64(p1.y-p2.y)) + math.Abs(float64(p1.z-p2.z)))
 }
 
 func values(m map[int]scanner) []scanner {
