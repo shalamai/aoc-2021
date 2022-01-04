@@ -95,26 +95,50 @@ func detectScanners(initialScanner scanner, beacons [][]coord) map[int]scanner {
 	return scanners
 }
 
+type detectScannerRes struct {
+	scanner    scanner
+	isDetected bool
+}
+
 func detectScanner(absoluteBeacons1 []coord, relativeBeacons2 []coord) (scanner, bool) {
-	for _, facing := range facings {
-		for _, top := range tops {
-			p := position{top, facing}
-			relativeRotated2 := rotateN(p, relativeBeacons2)
-			deltas := make(map[coord]int)
-			for _, absolute1 := range absoluteBeacons1 {
-				for _, rr2 := range relativeRotated2 {
-					scannerCoord := coord{absolute1.x - rr2.x, absolute1.y - rr2.y, absolute1.z - rr2.z}
-					deltas[scannerCoord]++
-					if deltas[scannerCoord] >= 12 {
-						absoluteBeacons2 := moveN(scannerCoord, relativeRotated2)
-						return scanner{scannerCoord, absoluteBeacons2}, true
-					}
-				}
+	ch := make(chan detectScannerRes)
+	for _, f := range facings {
+		go detectScannerForFacing(f, absoluteBeacons1, relativeBeacons2, ch)
+	}
+
+	failuresCount := 0
+	for res := range ch {
+		if res.isDetected {
+			return res.scanner, true
+		} else {
+			failuresCount++
+			if failuresCount == len(facings) {
+				return scanner{}, false
 			}
 		}
 	}
 
 	return scanner{}, false
+}
+
+func detectScannerForFacing(f facing, absoluteBeacons1 []coord, relativeBeacons2 []coord, ch chan detectScannerRes) {
+	for _, t := range tops {
+		p := position{t, f}
+		relativeRotated2 := rotateN(p, relativeBeacons2)
+		deltas := make(map[coord]int)
+		for _, absolute1 := range absoluteBeacons1 {
+			for _, rr2 := range relativeRotated2 {
+				scannerCoord := coord{absolute1.x - rr2.x, absolute1.y - rr2.y, absolute1.z - rr2.z}
+				deltas[scannerCoord]++
+				if deltas[scannerCoord] >= 12 {
+					absoluteBeacons2 := moveN(scannerCoord, relativeRotated2)
+					ch <- detectScannerRes{scanner{scannerCoord, absoluteBeacons2}, true}
+				}
+			}
+		}
+	}
+
+	ch <- detectScannerRes{scanner{}, false}
 }
 
 func moveN(delta coord, cs []coord) []coord {
