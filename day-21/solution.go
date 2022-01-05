@@ -43,6 +43,7 @@ func part2() int64 {
 
 	var p1Wons, p2Wons int64
 	rolls := quantumRollX3(3)
+	moves := quantumMoves(rolls)
 
 	q := make([]universe, 0)
 	q = append(q, universe0)
@@ -51,7 +52,7 @@ func part2() int64 {
 		u := q[0]
 		q = q[1:]
 
-		us, wons := play(u, rolls)
+		us, wons := play(u, moves)
 		if u.turn == 0 {
 			p1Wons += int64(wons)
 		} else {
@@ -111,30 +112,42 @@ func quantumRollX3(max int) []int {
 	return acc
 }
 
+func quantumMoves(rolls []int) map[int][]int {
+	acc := make(map[int][]int)
+	for from := 0; from < 10; from++ {
+		acc2 := make([]int, len(rolls))
+		for i, r := range rolls {
+			acc2[i] = movePlayer(from + 1, r)
+		}
+		acc[from] = acc2
+	}
+
+	return acc
+}
+
 func movePlayer(from int, steps int) int {
 	return 1 + (from-1+steps)%10
 }
 
-func play(u universe, rolls []int) (us []universe, wons int) {
+func play(u universe, moves map[int][]int) (us []universe, wons int) {
 	us = make([]universe, 0)
 	wons = 0
-
-	for _, r := range rolls {
-		if u.turn == 0 {
-			pNext := movePlayer(u.p1, r)
-			if u.p1Score+pNext >= 10 {
+	if u.turn == 0 {
+		for _, next := range moves[u.p1 - 1] {
+			if u.p1Score+next >= 13 {
 				wons++
 			} else {
-				us = append(us, universe{pNext, u.p2, u.p1Score + pNext, u.p2Score, 1})
+				us = append(us, universe{next, u.p2, u.p1Score + next, u.p2Score, 1})
 			}
-		} else {
-			pNext := movePlayer(u.p2, r)
-			if u.p2Score+pNext >= 10 {
+		}	
+	} else {
+		for _, next := range moves[u.p2 - 1] {
+			if u.p2Score+next >= 13 {
 				wons++
 			} else {
-				us = append(us, universe{u.p1, pNext, u.p1Score, u.p2Score + pNext, 0})
+				us = append(us, universe{u.p1, next, u.p1Score, u.p2Score + next, 0})
 			}
-		}
+		}	
 	}
 
 	return
