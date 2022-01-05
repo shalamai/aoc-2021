@@ -54,37 +54,17 @@ func toBinary(input string) []byte {
 	return res
 }
 
-func expand(field [][]byte, extra int) [][]byte {
-	res := make([][]byte, len(field)+extra*2+2)
+func expand(field [][]byte) [][]byte {
+	extra := 1
+	res := make([][]byte, len(field)+extra*2)
 	for i := 0; i < len(res); i++ {
 		res[i] = make([]byte, len(field[0])+extra*2+2)
 	}
 
-	for r := 0; r < len(res); r++ {
-		res[r][0] = 2
-		res[r][len(res[0])-1] = 2
-	}
-
-	for c := 0; c < len(res[0]); c++ {
-		res[0][c] = 2
-		res[len(res)-1][c] = 2
-	}
-
 	for r := 0; r < len(field); r++ {
 		for c := 0; c < len(field[0]); c++ {
-			res[extra+1+r][extra+1+c] = field[r][c]
+			res[r+extra][c+extra] = field[r][c]
 		}
-	}
-
-	return res
-}
-
-func cp(field [][]byte) [][]byte {
-	res := make([][]byte, len(field))
-	for i := 0; i < len(field); i++ {
-		row := make([]byte, len(field[0]))
-		copy(row, field[i])
-		res[i] = row
 	}
 
 	return res
@@ -97,9 +77,11 @@ func doStep(field [][]byte, encoding []byte, background byte) (field2 [][]byte, 
 		background2 = encoding[511]
 	}
 
-	field2 = cp(field)
-	for r := 1; r < len(field2)-1; r++ {
-		for c := 1; c < len(field2[0])-1; c++ {
+	field2 = expand(field)
+	for r2 := 0; r2 < len(field2); r2++ {
+		for c2 := 0; c2 < len(field2[0]); c2++ {
+			r := r2 - 1 // because new row is expaned
+			c := c2 - 1 // because new column is expaned
 			binaryIndex :=
 				cell(field, r-1, c-1, background) +
 					cell(field, r-1, c, background) +
@@ -112,12 +94,11 @@ func doStep(field [][]byte, encoding []byte, background byte) (field2 [][]byte, 
 					cell(field, r+1, c+1, background)
 
 			index, _ := strconv.ParseInt(binaryIndex, 2, 64)
-
-			field2[r][c] = encoding[index]
+			field2[r2][c2] = encoding[index]
 		}
 	}
 
-	return field2, background2
+	return
 }
 
 func cell(field [][]byte, r int, c int, background byte) string {
