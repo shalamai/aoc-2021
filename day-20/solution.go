@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	step := 2
+	step := 50
 
 	res1 := part1(step)
 	fmt.Println(res1)
@@ -17,12 +17,13 @@ func main() {
 func part1(step int) int {
 	field, encoding := parseInput()
 
+	res := expand(field, step)
 	var background byte = 0
 	for i := 0; i < step; i++ {
-		field, background = doStep(field, encoding, background)
+		res, background = doStep(res, encoding, background)
 	}
 
-	return calcLight(field)
+	return calcLights(res)
 }
 
 func parseInput() ([][]byte, []byte) {
@@ -53,45 +54,54 @@ func toBinary(input string) []byte {
 	return res
 }
 
-func expand(field [][]byte, background byte) [][]byte {
-	extra := 1
-	res := make([][]byte, len(field)+extra*2)
+func expand(field [][]byte, extra int) [][]byte {
+	res := make([][]byte, len(field)+extra*2+2)
 	for i := 0; i < len(res); i++ {
-		res[i] = make([]byte, len(field[0])+extra*2)
+		res[i] = make([]byte, len(field[0])+extra*2+2)
 	}
 
-	for r := 0; r < len(field); r ++ {
-		res[r][0] = background
-		res[r][len(res[0]) - 1] = background
+	for r := 0; r < len(res); r++ {
+		res[r][0] = 2
+		res[r][len(res[0])-1] = 2
 	}
 
-	for c := 0; c < len(field); c ++ {
-		res[0][c] = background
-		res[len(res) - 1][c] = background
+	for c := 0; c < len(res[0]); c++ {
+		res[0][c] = 2
+		res[len(res)-1][c] = 2
 	}
 
 	for r := 0; r < len(field); r++ {
 		for c := 0; c < len(field[0]); c++ {
-			res[extra+r][extra+c] = field[r][c]
+			res[extra+1+r][extra+1+c] = field[r][c]
 		}
 	}
 
 	return res
 }
 
-func doStep(field0 [][]byte, encoding []byte, background byte) (field2 [][]byte, background2 byte) {
+func cp(field [][]byte) [][]byte {
+	res := make([][]byte, len(field))
+	for i := 0; i < len(field); i++ {
+		row := make([]byte, len(field[0]))
+		copy(row, field[i])
+		res[i] = row
+	}
+
+	return res
+}
+
+func doStep(field [][]byte, encoding []byte, background byte) (field2 [][]byte, background2 byte) {
 	if background == 0 {
 		background2 = encoding[0]
 	} else {
 		background2 = encoding[511]
 	}
 
-	field := expand(field0, background)
-	field2 = expand(field0, background)
-	for r := 0; r < len(field2); r++ {
-		for c := 0; c < len(field2[0]); c++ {
+	field2 = cp(field)
+	for r := 1; r < len(field2)-1; r++ {
+		for c := 1; c < len(field2[0])-1; c++ {
 			binaryIndex :=
-					cell(field, r-1, c-1, background) +
+				cell(field, r-1, c-1, background) +
 					cell(field, r-1, c, background) +
 					cell(field, r-1, c+1, background) +
 					cell(field, r, c-1, background) +
@@ -102,6 +112,7 @@ func doStep(field0 [][]byte, encoding []byte, background byte) (field2 [][]byte,
 					cell(field, r+1, c+1, background)
 
 			index, _ := strconv.ParseInt(binaryIndex, 2, 64)
+
 			field2[r][c] = encoding[index]
 		}
 	}
@@ -110,14 +121,14 @@ func doStep(field0 [][]byte, encoding []byte, background byte) (field2 [][]byte,
 }
 
 func cell(field [][]byte, r int, c int, background byte) string {
-	if r < 0 || r >= len(field) || c < 0 || c >= len(field[0]) {
+	if field[r][c] == 2 {
 		return strconv.Itoa(int(background))
 	} else {
 		return strconv.Itoa(int(field[r][c]))
 	}
 }
 
-func calcLight(field [][]byte) int {
+func calcLights(field [][]byte) int {
 	acc := 0
 	for r := 0; r < len(field); r++ {
 		for c := 0; c < len(field[0]); c++ {
