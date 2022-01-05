@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	// res1 := part1()
-	// fmt.Println(res1)
+	res1 := part1()
+	fmt.Println(res1)
 
 	res2 := part2()
 	fmt.Println(res2)
@@ -39,7 +39,7 @@ func part1() int {
 
 func part2() int64 {
 	players := parseInput()
-	universe0 := universe{players[0], players[1], 0, 0, 0}
+	universe0 := universe{players[0], players[1], 0, 0, 0, 1}
 
 	var p1Wons, p2Wons int64
 	rolls := quantumRollX3(3)
@@ -93,7 +93,7 @@ func rollDiceX3(state int, max int) (res int, state2 int) {
 	return acc, state
 }
 
-func quantumRollX3(max int) []int {
+func quantumRollX3(max int) map[int]int {
 	acc := make([]int, 0)
 	for i := 1; i <= max; i++ {
 		acc = append(acc, i)
@@ -109,15 +109,22 @@ func quantumRollX3(max int) []int {
 		acc = acc2
 	}
 
-	return acc
+
+	m := make(map[int]int)
+	for _, v := range acc {
+		m[v]++
+	}
+
+	return m
 }
 
-func quantumMoves(rolls []int) map[int][]int {
-	acc := make(map[int][]int)
+func quantumMoves(rolls map[int]int) map[int]map[int]int {
+	acc := make(map[int]map[int]int)
 	for from := 0; from < 10; from++ {
-		acc2 := make([]int, len(rolls))
-		for i, r := range rolls {
-			acc2[i] = movePlayer(from + 1, r)
+		acc2 := make(map[int]int)
+		for roll, n := range rolls {
+			move := movePlayer(from + 1, roll)
+			acc2[move] = n
 		}
 		acc[from] = acc2
 	}
@@ -129,23 +136,23 @@ func movePlayer(from int, steps int) int {
 	return 1 + (from-1+steps)%10
 }
 
-func play(u universe, moves map[int][]int) (us []universe, wons int) {
+func play(u universe, moves map[int]map[int]int) (us []universe, wons int) {
 	us = make([]universe, 0)
 	wons = 0
 	if u.turn == 0 {
-		for _, next := range moves[u.p1 - 1] {
-			if u.p1Score+next >= 13 {
-				wons++
+		for move, n := range moves[u.p1 - 1] {
+			if u.p1Score+move >= 21 {
+				wons += u.multiplier * n
 			} else {
-				us = append(us, universe{next, u.p2, u.p1Score + next, u.p2Score, 1})
+				us = append(us, universe{move, u.p2, u.p1Score + move, u.p2Score, 1, u.multiplier * n})
 			}
 		}	
 	} else {
-		for _, next := range moves[u.p2 - 1] {
-			if u.p2Score+next >= 13 {
-				wons++
+		for move, n := range moves[u.p2 - 1] {
+			if u.p2Score+move >= 21 {
+				wons += u.multiplier * n
 			} else {
-				us = append(us, universe{u.p1, next, u.p1Score, u.p2Score + next, 0})
+				us = append(us, universe{u.p1, move, u.p1Score, u.p2Score + move, 0, u.multiplier * n})
 			}
 		}	
 	}
@@ -165,5 +172,5 @@ func min(as []int) int {
 }
 
 type universe struct {
-	p1, p2, p1Score, p2Score, turn int
+	p1, p2, p1Score, p2Score, turn, multiplier int
 }
