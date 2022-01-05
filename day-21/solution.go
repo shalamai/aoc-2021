@@ -39,12 +39,11 @@ func part1() int {
 
 func part2() int64 {
 	players := parseInput()
-	playersScores := make([]int, len(players))
-	universe0 := universe{players, playersScores}
+	universe0 := universe{players[0], players[1], 0, 0, 0}
 
-	winners := make([]int64, len(players))
+	var p1Wons, p2Wons int64
 	rolls := quantumRollX3(3)
-	
+
 	q := make([]universe, 0)
 	q = append(q, universe0)
 
@@ -52,14 +51,20 @@ func part2() int64 {
 		u := q[0]
 		q = q[1:]
 
-		us, ws := playRound(u, rolls)
-		for i, w := range ws {
-			winners[i] += int64(w)
+		us, wons := play(u, rolls)
+		if u.turn == 0 {
+			p1Wons += int64(wons)
+		} else {
+			p2Wons += int64(wons)
 		}
 		q = append(q, us...)
 	}
 
-	return max(winners)
+	if p1Wons > p2Wons {
+		return p1Wons
+	} else {
+		return p2Wons
+	}
 }
 
 func parseInput() []int {
@@ -110,34 +115,29 @@ func movePlayer(from int, steps int) int {
 	return 1 + (from-1+steps)%10
 }
 
-func playRound(u universe, rolls []int) (us []universe, winners []int) {
+func play(u universe, rolls []int) (us []universe, wons int) {
 	us = make([]universe, 0)
-	winners = make([]int, len(u.players))
-	for i, p := range u.players {
-		for _, r := range rolls {
-			p2 := movePlayer(p, r)
-			if u.playersScores[i] + p2 >= 21 {
-				winners[i]++
+	wons = 0
+
+	for _, r := range rolls {
+		if u.turn == 0 {
+			pNext := movePlayer(u.p1, r)
+			if u.p1Score+pNext >= 10 {
+				wons++
 			} else {
-				u2 := cpUniverse(u)
-				u2.players[i] = p2
-				u2.playersScores[i] = u.playersScores[i] + p2
-				us = append(us, u2)
+				us = append(us, universe{pNext, u.p2, u.p1Score + pNext, u.p2Score, 1})
+			}
+		} else {
+			pNext := movePlayer(u.p2, r)
+			if u.p2Score+pNext >= 10 {
+				wons++
+			} else {
+				us = append(us, universe{u.p1, pNext, u.p1Score, u.p2Score + pNext, 0})
 			}
 		}
 	}
 
 	return
-}
-
-func cpUniverse(u universe) universe {
-	players2 := make([]int, len(u.players))
-	playersScores2 := make([]int, len(u.playersScores))
-
-	copy(players2, u.players)
-	copy(playersScores2, u.playersScores)
-
-	return universe{players2, playersScores2}
 }
 
 func min(as []int) int {
@@ -151,18 +151,6 @@ func min(as []int) int {
 	return min
 }
 
-func max(as []int64) int64 {
-	max := as[0]
-	for _, a := range as {
-		if a > max {
-			max = a
-		}
-	}
-
-	return max
-}
-
 type universe struct {
-	players       []int
-	playersScores []int
+	p1, p2, p1Score, p2Score, turn int
 }
