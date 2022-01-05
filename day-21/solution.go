@@ -37,12 +37,12 @@ func part1() int {
 	return -1
 }
 
-func part2() int {
+func part2() int64 {
 	players := parseInput()
 	playersScores := make([]int, len(players))
 	universe0 := universe{players, playersScores}
 
-	winners := make([]int, len(players))
+	winners := make([]int64, len(players))
 	rolls := quantumRollX3(3)
 	
 	q := make([]universe, 0)
@@ -54,7 +54,7 @@ func part2() int {
 
 		us, ws := playRound(u, rolls)
 		for i, w := range ws {
-			winners[i] += w
+			winners[i] += int64(w)
 		}
 		q = append(q, us...)
 	}
@@ -151,7 +151,7 @@ func min(as []int) int {
 	return min
 }
 
-func max(as []int) int {
+func max(as []int64) int64 {
 	max := as[0]
 	for _, a := range as {
 		if a > max {
