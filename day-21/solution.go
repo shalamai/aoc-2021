@@ -39,32 +39,17 @@ func part1() int {
 
 func part2() int64 {
 	players := parseInput()
-	universe0 := universe{players[0], players[1], 0, 0, 0, 1}
+	universe0 := universe{players[0], players[1], 0, 0, 0}
 
-	var p1Wons, p2Wons int64
 	rolls := quantumRollX3(3)
 	moves := quantumMoves(rolls)
-
-	q := make([]universe, 0)
-	q = append(q, universe0)
-
-	for len(q) > 0 {
-		u := q[0]
-		q = q[1:]
-
-		us, wons := play(u, moves)
-		if u.turn == 0 {
-			p1Wons += int64(wons)
-		} else {
-			p2Wons += int64(wons)
-		}
-		q = append(q, us...)
-	}
-
-	if p1Wons > p2Wons {
-		return p1Wons
+	
+	res := play(universe0, moves)
+	
+	if res.p1Wons > res.p2Wons {
+		return res.p1Wons
 	} else {
-		return p2Wons
+		return res.p2Wons
 	}
 }
 
@@ -136,28 +121,40 @@ func movePlayer(from int, steps int) int {
 	return 1 + (from-1+steps)%10
 }
 
-func play(u universe, moves map[int]map[int]int) (us []universe, wons int) {
-	us = make([]universe, 0)
-	wons = 0
+var cash map[universe]res = make(map[universe]res)
+func play(u universe, moves map[int]map[int]int) res {
+	if r, ok := cash[u]; ok {
+		return r
+	}
+	
+	var p1Wons, p2Wons int64
+
 	if u.turn == 0 {
 		for move, n := range moves[u.p1 - 1] {
-			if u.p1Score+move >= 21 {
-				wons += u.multiplier * n
+			if u.p1Score+move >= 25 {
+				p1Wons += int64(n)
 			} else {
-				us = append(us, universe{move, u.p2, u.p1Score + move, u.p2Score, 1, u.multiplier * n})
+				res := play(universe{move, u.p2, u.p1Score + move, u.p2Score, 1}, moves)
+				p1Wons += int64(n) * res.p1Wons
+				p2Wons += int64(n) * res.p2Wons
 			}
 		}	
 	} else {
 		for move, n := range moves[u.p2 - 1] {
-			if u.p2Score+move >= 21 {
-				wons += u.multiplier * n
+			if u.p2Score+move >= 25 {
+				p2Wons += int64(n)
 			} else {
-				us = append(us, universe{u.p1, move, u.p1Score, u.p2Score + move, 0, u.multiplier * n})
+				res := play(universe{u.p1, move, u.p1Score, u.p2Score + move, 0}, moves)
+				p1Wons += int64(n) * res.p1Wons
+				p2Wons += int64(n) * res.p2Wons
 			}
 		}	
 	}
 
-	return
+	r := res{p1Wons, p2Wons}
+	cash[u] = r
+
+	return r
 }
 
 func min(as []int) int {
@@ -172,5 +169,9 @@ func min(as []int) int {
 }
 
 type universe struct {
-	p1, p2, p1Score, p2Score, turn, multiplier int
+	p1, p2, p1Score, p2Score, turn int
+}
+
+type res struct {
+	p1Wons, p2Wons int64
 }
