@@ -17,16 +17,8 @@ func main() {
 
 func part1() int {
 	steps := parseInput()
-	area := cuboid{-50, 50,-50, 50,-50, 50}
-	validSteps := make([]rebootStep, 0)
-	for _, s := range steps {
-		intersection, intersected := area.intersection(s.cuboid)
-		if intersected{
-			s.cuboid = intersection
-			validSteps = append(validSteps, s)
-		}
-	}
-	return calcReactorState(validSteps)
+	shrinked := shrink(steps, cuboid{-50, 50,-50, 50,-50, 50})
+	return calcReactorState(shrinked)
 }
 
 func part2() int {
@@ -61,6 +53,19 @@ func parseInput() []rebootStep {
 		acc = append(acc, rebootStep{cuboid{x1, x2, y1, y2, z1, z2}, isOn})
 	}
 	return acc
+}
+
+func shrink(steps []rebootStep, area cuboid) []rebootStep {
+	shrinked := make([]rebootStep, 0)
+	for _, s := range steps {
+		intersection, intersected := area.intersection(s.cuboid)
+		if intersected{
+			s.cuboid = intersection
+			shrinked = append(shrinked, s)
+		}
+	}
+
+	return shrinked
 }
 
 func calcReactorState(steps []rebootStep) int {
