@@ -15,7 +15,7 @@ func part1() int {
 	initial := state{
 		price: 0,
 		players: []player{
-			{"A", coord{2, 3}}, {"B", coord{3, 3}}, {"C", coord{2, 5}}, {"A", coord{3, 3}},
+			{"A", coord{2, 3}}, {"B", coord{3, 3}}, {"C", coord{2, 5}}, {"A", coord{3, 5}},
 			{"B", coord{2, 7}}, {"D", coord{3, 7}}, {"D", coord{2, 9}}, {"C", coord{3, 9}},
 		},
 		targets: map[string][]coord{
@@ -86,7 +86,7 @@ func movesIntoTheRoom(s state, pi int) []state {
 		s2.targets[p.name] = s2.targets[p.name][1:]
 		s2.players = append(s2.players[:pi], s2.players[pi+1:]...)
 		s2.history = append(s2.history, history{p.name, p.coord, t})
-		res = append(res, s)
+		res = append(res, s2)
 	}
 
 	return res
