@@ -3,12 +3,19 @@ package main
 import (
 	"fmt"
 	"math"
+	"time"
 )
 
-// memoize
 func main() {
-	res1 := part1()
-	fmt.Println(res1)
+	// start := time.Now()
+	// res1 := part1()
+	// fmt.Println(time.Since(start))
+	// fmt.Println(res1)
+	
+	start := time.Now()
+	res2 := part2()
+	fmt.Println(time.Since(start))
+	fmt.Println(res2)
 }
 
 func part1() int {
@@ -26,27 +33,61 @@ func part1() int {
 		history: make([]history, 0),
 	}
 
-	return findMin(initial)
+	return findMin(initial).price
 }
 
-func findMin(s state) int {
-	if len(s.players) == 0 {
-		fmt.Println(s)
-		return 0
+func part2() int {
+	initial := state{
+		players: []player{
+			{"A", coord{2, 3}}, {"D", coord{3, 3}}, {"D", coord{4, 3}}, {"B", coord{5, 3}}, 
+			{"C", coord{2, 5}}, {"C", coord{3, 5}}, {"B", coord{4, 5}}, {"A", coord{5, 5}},
+			{"B", coord{2, 7}}, {"B", coord{3, 7}}, {"A", coord{4, 7}}, {"D", coord{5, 7}}, 
+			{"D", coord{2, 9}}, {"A", coord{3, 9}}, {"C", coord{4, 9}}, {"C", coord{5, 9}},
+		},
+		targets: map[string][]coord{
+			"A": {coord{5, 3}, coord{4, 3}, coord{3, 3}, coord{2, 3}},
+			"B": {coord{5, 5}, coord{4, 5}, coord{3, 5}, coord{2, 5}},
+			"C": {coord{5, 7}, coord{4, 7}, coord{3, 7}, coord{2, 7}},
+			"D": {coord{5, 9}, coord{4, 9}, coord{3, 9}, coord{2, 9}},
+		},
+		history: make([]history, 0),
 	}
 
-	min := math.MaxInt
+	return findMin(initial).price
+}
+
+var cache = map[string]findMinRes{}
+
+var cacheHit = 0
+
+func findMin(s state) findMinRes {
+	fmt.Printf("%v, %v\n", len(cache), cacheHit)
+	if v, ok := cache[s.hash()]; ok {
+		cacheHit++
+		return v
+	}
+
+	if len(s.players) == 0 {
+		return findMinRes{0, true}
+	}
+
+	min := 0
+	solved := false
 	for i := range s.players {
 		for _, move := range moves(s, i) {
-			price := findMin(move.state)
-			total := move.price + price
-			if total < min {
-				min = total
+			if res := findMin(move.state); res.solved {
+				total := move.price + res.price
+				if !solved || total < min {
+					min = total
+					solved = true
+				}
 			}
 		}
 	}
 
-	return min
+	res := findMinRes{min, solved}
+	cache[s.hash()] = res
+	return res
 }
 
 func moves(s state, i int) []move {
@@ -159,7 +200,7 @@ func containsInt(as []int, b int) bool {
 }
 
 var entrances = []int{3, 5, 7, 9}
-
+var playerTypes = []string{"A", "B", "C", "D"}
 var price map[string]int = map[string]int{
 	"A": 1,
 	"B": 10,
@@ -192,6 +233,11 @@ type move struct {
 	state
 }
 
+type findMinRes struct {
+	price int
+	solved bool
+}
+
 func (s state) copy() state {
 	players2 := make([]player, len(s.players))
 	copy(players2, s.players)
@@ -210,4 +256,20 @@ func (s state) copy() state {
 		targets: targets2,
 		history: history2,
 	}
+}
+
+func (s state) hash() string {
+	h := ""
+
+	for _, p := range s.players {
+		h += fmt.Sprintf("%v", p)
+	}
+	
+	for _, t := range playerTypes {
+		for _, spot := range s.targets[t] {
+			h += fmt.Sprintf("%v,%v", t, spot)
+		}
+	}
+
+	return h
 }
