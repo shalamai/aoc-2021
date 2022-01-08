@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-// add memoization ?
+// memoize
 func main() {
 	res1 := part1()
 	fmt.Println(res1)
@@ -13,7 +13,6 @@ func main() {
 
 func part1() int {
 	initial := state{
-		price: 0,
 		players: []player{
 			{"A", coord{2, 3}}, {"B", coord{3, 3}}, {"C", coord{2, 5}}, {"A", coord{3, 5}},
 			{"B", coord{2, 7}}, {"D", coord{3, 7}}, {"D", coord{2, 9}}, {"C", coord{3, 9}},
@@ -31,17 +30,18 @@ func part1() int {
 }
 
 func findMin(s state) int {
-	fmt.Println(s)
 	if len(s.players) == 0 {
-		return s.price
+		fmt.Println(s)
+		return 0
 	}
 
 	min := math.MaxInt
 	for i := range s.players {
-		for _, s2 := range moves(s, i) {
-			m := findMin(s2)
-			if m < min {
-				min = m
+		for _, move := range moves(s, i) {
+			price := findMin(move.state)
+			total := move.price + price
+			if total < min {
+				min = total
 			}
 		}
 	}
@@ -49,7 +49,7 @@ func findMin(s state) int {
 	return min
 }
 
-func moves(s state, i int) []state {
+func moves(s state, i int) []move {
 	p := s.players[i]
 	if p.r == 1 {
 		return movesIntoTheRoom(s, i)
@@ -58,35 +58,33 @@ func moves(s state, i int) []state {
 	}
 }
 
-func movesIntoTheHall(s state, pi int) []state {
-	res := make([]state, 0)
+func movesIntoTheHall(s state, pi int) []move {
+	res := make([]move, 0)
 	p := s.players[pi]
 
 	for _, spot := range accessibleHallSpots(s, pi) {
 		s2 := s.copy()
-		s2.price += calcPrice(p, spot)
 		s2.players[pi].coord = spot
 		s2.history = append(s2.history, history{p.name, p.coord, spot})
 
-		res = append(res, s2)
+		res = append(res, move{calcPrice(p, spot), s2})
 	}
 
 	return res
 }
 
-func movesIntoTheRoom(s state, pi int) []state {
-	res := make([]state, 0)
+func movesIntoTheRoom(s state, pi int) []move {
+	res := make([]move, 0)
 
 	if isRoomAccessible(s, pi) && isRoomFree(s, pi) {
 		p := s.players[pi]
 		t := s.targets[p.name][0]
 
 		s2 := s.copy()
-		s2.price += calcPrice(p, t)
 		s2.targets[p.name] = s2.targets[p.name][1:]
 		s2.players = append(s2.players[:pi], s2.players[pi+1:]...)
 		s2.history = append(s2.history, history{p.name, p.coord, t})
-		res = append(res, s2)
+		res = append(res, move{calcPrice(p, t), s2})
 	}
 
 	return res
@@ -184,10 +182,14 @@ type history struct {
 }
 
 type state struct {
-	price   int
 	players []player
 	targets map[string][]coord
 	history []history
+}
+
+type move struct {
+	price int
+	state
 }
 
 func (s state) copy() state {
@@ -204,7 +206,6 @@ func (s state) copy() state {
 	copy(history2, s.history)
 
 	return state{
-		price:   s.price,
 		players: players2,
 		targets: targets2,
 		history: history2,
