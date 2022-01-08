@@ -27,24 +27,21 @@ func part1() int {
 		history: make([]history, 0),
 	}
 
-	q := make([]state, 0)
-	q = append(q, initial)
+	return findMin(initial)
+}
+
+func findMin(s state) int {
+	fmt.Println(s)
+	if len(s.players) == 0 {
+		return s.price
+	}
 
 	min := math.MaxInt
-	for len(q) > 0 {
-		s := q[0]
-		q = q[1:]
-
-		if len(s.players) == 0 {
-			if s.price < min {
-				min = s.price
-			}
-			continue
-		}
-
-		for i := range s.players {
-			for _, s2 := range moves(s, i) {
-				q = append(q, s2)
+	for i := range s.players {
+		for _, s2 := range moves(s, i) {
+			m := findMin(s2)
+			if m < min {
+				min = m
 			}
 		}
 	}
