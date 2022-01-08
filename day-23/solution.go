@@ -32,14 +32,12 @@ func part1() int {
 
 	min := math.MaxInt
 	for len(q) > 0 {
-		fmt.Println(len(q))
 		s := q[0]
 		q = q[1:]
 
 		if len(s.players) == 0 {
 			if s.price < min {
 				min = s.price
-				panic(s) // rm
 			}
 			continue
 		}
@@ -63,41 +61,33 @@ func moves(s state, i int) []state {
 	}
 }
 
-func movesIntoTheHall(s state, i int) []state {
+func movesIntoTheHall(s state, pi int) []state {
 	res := make([]state, 0)
+	p := s.players[pi]
 
-	from, to := accessibleHallRange(s, i)
-	p := s.players[i]
+	for _, spot := range accessibleHallSpots(s, pi) {
+		s2 := s.copy()
+		s2.price += calcPrice(p, spot)
+		s2.players[pi].coord = spot
+		s2.history = append(s2.history, history{p.name, p.coord, spot})
 
-	for j := from; j <= to; j++ {
-		if !containsInt(entranceC, j) {
-			c := coord{1, j}
-			s2 := s.copy()
-			s2.price += calcPrice(p, c)
-			s2.players[i].coord = c
-			s2.history = append(s2.history, history{p.name, p.coord, c})
-
-			res = append(res, s2)
-		}
+		res = append(res, s2)
 	}
 
 	return res
 }
 
-// change i to player
-func movesIntoTheRoom(s state, i int) []state {
+func movesIntoTheRoom(s state, pi int) []state {
 	res := make([]state, 0)
 
-	from, to := accessibleHallRange(s, i)
-	p := s.players[i]
-	roomC := s.targets[p.name][0].c
-	if roomC >= from && roomC <= to && accessibleRoom(s, i) {
+	if isRoomAccessible(s, pi) && isRoomFree(s, pi) {
+		p := s.players[pi]
 		t := s.targets[p.name][0]
 
 		s2 := s.copy()
 		s2.price += calcPrice(p, t)
 		s2.targets[p.name] = s2.targets[p.name][1:]
-		s2.players = append(s2.players[:i], s2.players[i+1:]...)
+		s2.players = append(s2.players[:pi], s2.players[pi+1:]...)
 		s2.history = append(s2.history, history{p.name, p.coord, t})
 		res = append(res, s)
 	}
@@ -105,12 +95,12 @@ func movesIntoTheRoom(s state, i int) []state {
 	return res
 }
 
-func accessibleHallRange(s state, i int) (int, int) {
-	p := s.players[i]
+func accessibleHallRange(s state, pi int) (int, int) {
+	p := s.players[pi]
 	from := 1
 	to := 11
 	for i2, p2 := range s.players {
-		if i == i2 || p2.r != 1 {
+		if pi == i2 || p2.r != 1 {
 			continue
 		}
 
@@ -126,30 +116,36 @@ func accessibleHallRange(s state, i int) (int, int) {
 	return from, to
 }
 
-func accessibleRoom(s state, i int) bool {
-	p := s.players[i]
-	room := s.targets[p.name]
-	for i2, p2 := range s.players {
-		if i == i2 {
-			continue
-		}
+func accessibleHallSpots(s state, pi int) []coord {
+	res := make([]coord, 0)
+	from, to := accessibleHallRange(s, pi)
 
-		if (p2.r == room[0].r && p2.c == room[0].c) || (p2.r == room[1].r && p2.c == room[1].c) {
-			return false
+	for c := from; c <= to; c++ {
+		if !containsInt(entrances, c) {
+			res = append(res, coord{1, c})
+		}
+	}
+
+	return res
+}
+
+func isRoomAccessible(s state, pi int) bool {
+	from, to := accessibleHallRange(s, pi)
+	roomC := s.targets[s.players[pi].name][0].c
+
+	return roomC >= from && roomC <= to
+}
+
+func isRoomFree(s state, pi int) bool {
+	for _, spot := range s.targets[s.players[pi].name] {
+		for _, p2 := range s.players {
+			if p2.coord == spot {
+				return false
+			}
 		}
 	}
 
 	return true
-}
-
-func find(as []player, b player) (int, bool) {
-	for i, a := range as {
-		if a == b {
-			return i, true
-		}
-	}
-
-	return -1, false
 }
 
 func calcPrice(p player, to coord) int {
@@ -167,7 +163,7 @@ func containsInt(as []int, b int) bool {
 	return false
 }
 
-var entranceC = []int{3, 5, 7, 9}
+var entrances = []int{3, 5, 7, 9}
 
 var price map[string]int = map[string]int{
 	"A": 1,
@@ -200,7 +196,7 @@ type state struct {
 func (s state) copy() state {
 	players2 := make([]player, len(s.players))
 	copy(players2, s.players)
-	
+
 	targets2 := make(map[string][]coord)
 	for k, v := range s.targets {
 		targets2[k] = make([]coord, len(v))
@@ -211,7 +207,7 @@ func (s state) copy() state {
 	copy(history2, s.history)
 
 	return state{
-		price: s.price,
+		price:   s.price,
 		players: players2,
 		targets: targets2,
 		history: history2,
