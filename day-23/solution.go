@@ -101,11 +101,11 @@ func accessibleHallRange(s state, pi int) (int, int) {
 			continue
 		}
 
-		if p2.c < p.c && p2.c > from {
+		if p2.c < p.c && p2.c >= from {
 			from = p2.c + 1
 		}
 
-		if p2.c > p.c && p2.c < to {
+		if p2.c > p.c && p2.c <= to {
 			to = p2.c - 1
 		}
 	}
