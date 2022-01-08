@@ -7,15 +7,15 @@ import (
 )
 
 func main() {
-	// start := time.Now()
-	// res1 := part1()
-	// fmt.Println(time.Since(start))
-	// fmt.Println(res1)
-	
 	start := time.Now()
-	res2 := part2()
+	res1 := part1()
 	fmt.Println(time.Since(start))
-	fmt.Println(res2)
+	fmt.Println(res1)
+	
+	// start := time.Now()
+	// res2 := part2()
+	// fmt.Println(time.Since(start))
+	// fmt.Println(res2)
 }
 
 func part1() int {
@@ -55,7 +55,6 @@ func part2() int {
 }
 
 var cache = map[string]findMinRes{}
-
 var cacheHit = 0
 
 func findMin(s state) findMinRes {
@@ -150,6 +149,10 @@ func accessibleHallRange(s state, pi int) (int, int) {
 
 func accessibleHallSpots(s state, pi int) []coord {
 	res := make([]coord, 0)
+	if !exitToTheHallIsFree(s, pi) {
+		return res
+	}
+
 	from, to := accessibleHallRange(s, pi)
 
 	for c := from; c <= to; c++ {
@@ -159,6 +162,17 @@ func accessibleHallSpots(s state, pi int) []coord {
 	}
 
 	return res
+}
+
+func exitToTheHallIsFree(s state, pi int) bool {
+	p := s.players[pi]
+	for _, p2 := range s.players {
+		if p.c == p2.c && p2.r < p.r {
+			return false
+		}
+	}
+
+	return true
 }
 
 func isRoomAccessible(s state, pi int) bool {
@@ -211,11 +225,6 @@ type coord struct {
 type player struct {
 	name string
 	coord
-}
-
-type history struct {
-	name     string
-	from, to coord
 }
 
 type state struct {
