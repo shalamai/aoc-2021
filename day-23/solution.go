@@ -30,7 +30,6 @@ func part1() int {
 			"C": {coord{3, 7}, coord{2, 7}},
 			"D": {coord{3, 9}, coord{2, 9}},
 		},
-		history: make([]history, 0),
 	}
 
 	return findMin(initial).price
@@ -50,7 +49,6 @@ func part2() int {
 			"C": {coord{5, 7}, coord{4, 7}, coord{3, 7}, coord{2, 7}},
 			"D": {coord{5, 9}, coord{4, 9}, coord{3, 9}, coord{2, 9}},
 		},
-		history: make([]history, 0),
 	}
 
 	return findMin(initial).price
@@ -106,7 +104,6 @@ func movesIntoTheHall(s state, pi int) []move {
 	for _, spot := range accessibleHallSpots(s, pi) {
 		s2 := s.copy()
 		s2.players[pi].coord = spot
-		s2.history = append(s2.history, history{p.name, p.coord, spot})
 
 		res = append(res, move{calcPrice(p, spot), s2})
 	}
@@ -124,7 +121,6 @@ func movesIntoTheRoom(s state, pi int) []move {
 		s2 := s.copy()
 		s2.targets[p.name] = s2.targets[p.name][1:]
 		s2.players = append(s2.players[:pi], s2.players[pi+1:]...)
-		s2.history = append(s2.history, history{p.name, p.coord, t})
 		res = append(res, move{calcPrice(p, t), s2})
 	}
 
@@ -225,7 +221,6 @@ type history struct {
 type state struct {
 	players []player
 	targets map[string][]coord
-	history []history
 }
 
 type move struct {
@@ -248,13 +243,9 @@ func (s state) copy() state {
 		copy(targets2[k], v)
 	}
 
-	history2 := make([]history, len(s.history))
-	copy(history2, s.history)
-
 	return state{
 		players: players2,
 		targets: targets2,
-		history: history2,
 	}
 }
 
