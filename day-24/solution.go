@@ -5,20 +5,20 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func main() {
 	// res1 := part1()
 	// fmt.Println(res1)
 
-	instructions := parseInput()
-	a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
+	// n := 11111121161114
+	// instructions := parseInput()
+	// a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
+	// a.exec(instructions, number2stream(n))
+	// fmt.Println(a.vars["z"])
 
-	start := time.Now()
-	a.exec(instructions, number2stream(11111111111111))
-	fmt.Println(time.Since(start))
-	fmt.Println(a)
+	// r := execOptimized(number2stream(n))
+	// fmt.Println(r)
 }
 
 func part1() int {
@@ -29,6 +29,20 @@ func part1() int {
 			a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
 			a.exec(instructions, number2stream(number))
 			if a.vars["z"] == 0 {
+				return number
+			}
+		}
+	}
+
+	return -1
+}
+
+func part1Optimized() int {
+	for number := 99999999999999; number >= 11111111111111; number-- {
+		if !containsZero(number) {
+			fmt.Println(number)
+			z := execOptimized(number2stream(number))
+			if z == 0 {
 				return number
 			}
 		}
@@ -70,6 +84,61 @@ func number2stream(n int) []int {
 	}
 
 	return acc
+}
+
+func execOptimized(as []int) int {
+	z0 := as[0] + 7
+	z1 := z0*26 + (as[1] + 15)
+	z2 := z1*26 + (as[2] + 2)
+	var z3 int
+	if z2%26-3 == as[3] {
+		z3 = z2 / 26
+	} else {
+		z3 = (z2/26)*26 + (15 + as[3])
+	}
+	z4 := z3*26 + (as[4] + 14)
+	z5 := (z4/26)*26 + (as[5] + 2)
+	z6 := z5*26 + (as[6] + 15)
+
+	var z7 int
+	if z6%26-7 == as[7] {
+		z7 = z6 / 26
+	} else {
+		z7 = (z6/26)*26 + (as[7] + 1)
+	}
+
+	var z8 int
+	if z7%26-11 == as[8] {
+		z8 = z7 / 26
+	} else {
+		z8 = (z7/26)*26 + (as[8] + 15)
+	}
+
+	var z9 int
+	if z8%26-4 == as[9] {
+		z9 = z8 / 26
+	} else {
+		z9 = (z8/26)*26 + (15 + as[9])
+	}
+
+	z10 := z9*26 + (as[10] + 12)
+	z11 := z10*26 + (as[11] + 2)
+
+	var z12 int
+	if z11%26-8 == as[12] {
+		z12 = z11 / 26
+	} else {
+		z12 = (z11/26)*26 + (as[12] + 13)
+	}
+
+	var z13 int
+	if z12%26-10 == as[13] {
+		z13 = z12 / 26
+	} else {
+		z13 = (z12/26)*26 + (as[13] + 13)
+	}
+
+	return z13
 }
 
 type instruction struct {
