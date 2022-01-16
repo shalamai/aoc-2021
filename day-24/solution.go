@@ -12,6 +12,7 @@ func main() {
 	// fmt.Println(res1)
 
 
+// == largest	
 //as0 -> 6
 //as1 -> 5
 //as2 -> 9
@@ -27,10 +28,28 @@ func main() {
 //as12 -> 3
 //as13 -> 9
 
-	n := 65984919997939
+// == smallest
+//as0 -> 1
+//as1 -> 1
+//as2 -> 2
+//as3 -> 1
+//as4 -> 1
+//as5 -> 6
+//as6 -> 1
+//as7 -> 9
+//as8 -> 5
+//as9 -> 4
+//as10 -> 1
+//as11 -> 7
+//as12 -> 1
+//as13 -> 3
+
+
+	// largest := 65984919997939
+	smallest := 11211619541713
 	instructions := parseInput()
 	a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
-	a.exec(instructions, number2stream(n))
+	a.exec(instructions, number2stream(smallest))
 	fmt.Println(a.vars["z"])
 }
 
