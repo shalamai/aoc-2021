@@ -11,13 +11,27 @@ func main() {
 	// res1 := part1()
 	// fmt.Println(res1)
 
-	n := 11893121161114
+
+//as0 -> 6
+//as1 -> 5
+//as2 -> 9
+//as3 -> 8
+//as4 -> 4
+//as5 -> 9
+//as6 -> 1
+//as7 -> 9
+//as8 -> 9
+//as9 -> 9
+//as10 -> 7
+//as11 -> 9
+//as12 -> 3
+//as13 -> 9
+
+	n := 65984919997939
 	instructions := parseInput()
 	a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
 	a.exec(instructions, number2stream(n))
 	fmt.Println(a.vars["z"])
-	r := execOptimized(number2stream(n))
-	fmt.Println(r)
 }
 
 func part1() int {
@@ -34,20 +48,6 @@ func part1() int {
 	}
 
 	return -1
-}
-
-func part1Optimized() bool {
-	for number := 99999999999999; number >= 11111111111111; number-- {
-		if !containsZero(number) {
-			fmt.Println(number)
-			isOk := execOptimized(number2stream(number))
-			if isOk {
-				return true
-			}
-		}
-	}
-
-	return false
 }
 
 func parseInput() []instruction {
@@ -85,68 +85,6 @@ func number2stream(n int) []int {
 	return acc
 }
 
-func execOptimized(as []int) bool {
-	z0 := as[0] + 7
-	z1 := z0*26 + (as[1] + 15)
-	z2 := z1*26 + (as[2] + 2)
-	var z3 int
-	if z2%26-3 == as[3] {
-		z3 = z2 / 26
-	} else {
-		z3 = (z2/26)*26 + (15 + as[3])
-	}
-	z4 := z3*26 + (as[4] + 14)
-		
-	var z5 int
-	if ((z4 % 26) - 9) == as[5] {
-		z5 = z4 / 26
-	} else {
-		z5 = (z4 / 26) * 26 + (as[5] + 2)
-	}
-
-	z6 := z5*26 + (as[6] + 15)
-
-	var z7 int
-	if z6%26-7 == as[7] {
-		z7 = z6 / 26
-	} else {
-		z7 = (z6/26)*26 + (as[7] + 1)
-	}
-
-	var z8 int
-	if z7%26-11 == as[8] {
-		z8 = z7 / 26
-	} else {
-		z8 = (z7/26)*26 + (as[8] + 15)
-	}
-
-	var z9 int
-	if z8%26-4 == as[9] {
-		z9 = z8 / 26
-	} else {
-		z9 = (z8/26)*26 + (15 + as[9])
-	}
-
-	z10 := z9*26 + (as[10] + 12)
-	z11 := z10*26 + (as[11] + 2)
-
-	var z12 int
-	if z11%26-8 == as[12] {
-		z12 = z11 / 26
-	} else {
-		z12 = (z11/26)*26 + (as[12] + 13)
-	}
-
-	var z13 int
-	if z12%26-10 == as[13] {
-		z13 = z12 / 26
-	} else {
-		z13 = (z12/26)*26 + (as[13] + 13)
-	}
-
-	fmt.Println(z13)
-	return z13 == 0
-}
 
 type instruction struct {
 	operator string
