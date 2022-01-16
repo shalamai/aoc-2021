@@ -11,14 +11,13 @@ func main() {
 	// res1 := part1()
 	// fmt.Println(res1)
 
-	// n := 11111121161114
-	// instructions := parseInput()
-	// a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
-	// a.exec(instructions, number2stream(n))
-	// fmt.Println(a.vars["z"])
-
-	// r := execOptimized(number2stream(n))
-	// fmt.Println(r)
+	n := 11893121161114
+	instructions := parseInput()
+	a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
+	a.exec(instructions, number2stream(n))
+	fmt.Println(a.vars["z"])
+	r := execOptimized(number2stream(n))
+	fmt.Println(r)
 }
 
 func part1() int {
@@ -37,18 +36,18 @@ func part1() int {
 	return -1
 }
 
-func part1Optimized() int {
+func part1Optimized() bool {
 	for number := 99999999999999; number >= 11111111111111; number-- {
 		if !containsZero(number) {
 			fmt.Println(number)
-			z := execOptimized(number2stream(number))
-			if z == 0 {
-				return number
+			isOk := execOptimized(number2stream(number))
+			if isOk {
+				return true
 			}
 		}
 	}
 
-	return -1
+	return false
 }
 
 func parseInput() []instruction {
@@ -86,7 +85,7 @@ func number2stream(n int) []int {
 	return acc
 }
 
-func execOptimized(as []int) int {
+func execOptimized(as []int) bool {
 	z0 := as[0] + 7
 	z1 := z0*26 + (as[1] + 15)
 	z2 := z1*26 + (as[2] + 2)
@@ -97,7 +96,14 @@ func execOptimized(as []int) int {
 		z3 = (z2/26)*26 + (15 + as[3])
 	}
 	z4 := z3*26 + (as[4] + 14)
-	z5 := (z4/26)*26 + (as[5] + 2)
+		
+	var z5 int
+	if ((z4 % 26) - 9) == as[5] {
+		z5 = z4 / 26
+	} else {
+		z5 = (z4 / 26) * 26 + (as[5] + 2)
+	}
+
 	z6 := z5*26 + (as[6] + 15)
 
 	var z7 int
@@ -138,7 +144,8 @@ func execOptimized(as []int) int {
 		z13 = (z12/26)*26 + (as[13] + 13)
 	}
 
-	return z13
+	fmt.Println(z13)
+	return z13 == 0
 }
 
 type instruction struct {
