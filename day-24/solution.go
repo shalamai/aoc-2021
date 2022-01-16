@@ -5,11 +5,20 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
-	res1 := part1()
-	fmt.Println(res1)
+	// res1 := part1()
+	// fmt.Println(res1)
+
+	instructions := parseInput()
+	a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
+
+	start := time.Now()
+	a.exec(instructions, number2stream(11111111111111))
+	fmt.Println(time.Since(start))
+	fmt.Println(a)
 }
 
 func part1() int {
@@ -17,9 +26,9 @@ func part1() int {
 	for number := 99999999999999; number >= 11111111111111; number-- {
 		if !containsZero(number) {
 			fmt.Println(number)
-			a := &alu{0, 0, 0, 0}
+			a := &alu{map[string]int{"x": 0, "y": 0, "z": 0, "w": 0}}
 			a.exec(instructions, number2stream(number))
-			if a.z == 0 {
+			if a.vars["z"] == 0 {
 				return number
 			}
 		}
@@ -70,40 +79,34 @@ type instruction struct {
 }
 
 type alu struct {
-	x, y, z, w int
+	vars map[string]int
 }
 
 func (al *alu) exec(instructions []instruction, inputStream []int) {
 	for _, inst := range instructions {
+		if _, found := al.vars[inst.operand1]; !found {
+			continue
+		}
+
 		switch inst.operator {
 		case "inp":
-			a := al.varPointer(inst.operand1)
-			n := inputStream[0]
+			al.vars[inst.operand1] = inputStream[0]
 			inputStream = inputStream[1:]
-			*a = n
 		case "add":
-			a := al.varPointer(inst.operand1)
-			b := al.varPointer(inst.operand2)
-			*a = *a + *b
+			al.vars[inst.operand1] = al.operand2value(inst.operand1) + al.operand2value(inst.operand2)
 		case "mul":
-			a := al.varPointer(inst.operand1)
-			b := al.varPointer(inst.operand2)
-			*a = *a * *b
+			al.vars[inst.operand1] = al.operand2value(inst.operand1) * al.operand2value(inst.operand2)
 		case "div":
-			a := al.varPointer(inst.operand1)
-			b := al.varPointer(inst.operand2)
-			*a = *a / *b
+			al.vars[inst.operand1] = al.operand2value(inst.operand1) / al.operand2value(inst.operand2)
 		case "mod":
-			a := al.varPointer(inst.operand1)
-			b := al.varPointer(inst.operand2)
-			*a = *a % *b
+			al.vars[inst.operand1] = al.operand2value(inst.operand1) % al.operand2value(inst.operand2)
 		case "eql":
-			a := al.varPointer(inst.operand1)
-			b := al.varPointer(inst.operand2)
-			if *a == *b {
-				*a = 1	
+			a := al.operand2value(inst.operand1)
+			b := al.operand2value(inst.operand2)
+			if a == b {
+				al.vars[inst.operand1] = 1
 			} else {
-				*a = 0	
+				al.vars[inst.operand1] = 0
 			}
 		default:
 			panic("aaaaa!!! wrong operator")
@@ -111,19 +114,11 @@ func (al *alu) exec(instructions []instruction, inputStream []int) {
 	}
 }
 
-func (a *alu) varPointer(v string) *int {
-	switch v {
-	case "x":
-		return &a.x
-	case "y":
-		return &a.y
-	case "z":
-		return &a.z
-	case "w":
-		return &a.w
-	default:
-		n, _ := strconv.ParseInt(v, 10, 64)
-		n2 := int(n)
-		return &n2
+func (al *alu) operand2value(operand string) int {
+	if _, found := al.vars[operand]; found {
+		return al.vars[operand]
+	} else {
+		n, _ := strconv.ParseInt(operand, 10, 64)
+		return int(n)
 	}
 }
